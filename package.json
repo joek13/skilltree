@@ -1,0 +1,16 @@
+{
+  "name": "skilltree",
+  "version": "0.0.1",
+  "description": "tree visualizer for courses in UVa's CS department",
+  "main": "index.js",
+  "author": "Joe Kerrigan <joek1301@gmail.com>",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^8.6.0",
+    "http-server": "^14.0.0"
+  },
+  "scripts": {
+    "serve": "yarn exec http-server"
+  }
+}
