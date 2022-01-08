@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 body {
+    /* variables */
+    --color-pink: #F786AA;
+    --color-yellow: #EA9010;
+    --color-green: #04A777;
+    --color-blue: #007991;
+
     /* use sans-serif font */
     font-family: Inter, Arial, Helvetica, sans-serif;
     /* disable scrollbars on overflow */
@@ -8,7 +14,7 @@ body {
 }
 
 /* fullscreen svg */
-html, body, svg {
+html, body, #vizContainer > svg {
     height: 100%;
     width: 100%;
     margin: 0;
@@ -27,6 +33,10 @@ html, body, svg {
     stroke-width: 3;
 }
 
+.link.corequisite {
+    stroke-dasharray: 3,3;
+}
+
 body {
     display: flex;
     flex-direction: row;
@@ -39,20 +49,23 @@ body {
 }
 
 #sidebar {
-    font-size: 0.8em;
     width: 500px;
     padding: 10px;
 }
 
-p {
-    font-size: 1.2rem;
-}
-
 .course.selected > circle {
-    stroke: #5F4BB6;
+    stroke: var(--color-blue);
     stroke-width: 5;
 }
 
 .course > circle {
     stroke: black;
+    fill: var(--color-green);
+}
+
+.course.core > circle {
+    fill: var(--color-pink);
+}
+.course.multiCore > circle {
+    fill: var(--color-yellow);
 }

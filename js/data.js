@@ -12,6 +12,10 @@ export const courses = new Map([
         "position": [0, 0],
         "prerequisites": [],
     }],
+    ["cs2330", {
+        "position": [0, 2],
+        "prerequisites": []
+    }],
     // level 1
     ["cs2110", {
         "position": [1, -1],
@@ -26,6 +30,11 @@ export const courses = new Map([
         "position": [2, 0],
         "prerequisites": ["cs2102", "cs2110"]
     }],
+    ["cs3710", {
+        "position": [2, 1],
+        "corequisites": ["cs2150"],
+        "prerequisites": []
+    }],
     ["calc", {
         display: "Calc I",
         "position": [2, 2],
@@ -34,7 +43,10 @@ export const courses = new Map([
     ["cs3102", {
         "position": [2, -2],
         "prerequisites": ["cs2102", "cs2110"]
-
+    }],
+    ["cs3205", {
+        "position": [2, 5],
+        "prerequisites": ["cs2102"]
     }],
     // level 3
     ["cs3240", {

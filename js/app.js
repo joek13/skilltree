@@ -12,17 +12,27 @@ for (const [courseId, obj] of courses) {
 }
 
 // create list of links from course data
-const edges = [];
+const prereqEdges = [];
+const coreqEdges = []; // corequisites: i.e, prerequisite courses that can be taken concurrently
 
 // for each course,
 for (const course of courses.values()) {
     // iterate through its prereqs.
     for (const prereqId of course.prerequisites) {
         // add this dependence relationship to the list of links.
-        edges.push({
+        prereqEdges.push({
             "source": prereqId,
             "target": course.id
         });
+    }
+    if (!!course.corequisites) {
+        // any corequisites?
+        for (const coreqId of course.corequisites) {
+            coreqEdges.push({
+                "source": coreqId,
+                "target": course.id
+            })
+        }
     }
 }
 
@@ -37,23 +47,16 @@ const INTRA_LEVEL_SPACING = 100 * UNIT;
 // radius of individual course nodes
 const NODE_RADIUS = 35 * UNIT;
 
-// color for core courses
-const CORE_COURSE_COLOR = "#F786AA";
-// color for core courses that are substitutable
-const CORE_ONEOF_COURSE_COLOR = "#EA9010";
-
-const OTHER_COURSE_COLOR = "#04A777";
-
-// returns the color a given node should be
-const getCourseColor = (course) => {
-    // core courses are green
-    if (coreCourses.indexOf(course.id) !== -1) {
-        return CORE_COURSE_COLOR;
-    } else if (multiCoreCourses.indexOf(course.id) !== -1) {
-        return CORE_ONEOF_COURSE_COLOR;
+// returns the css classes that should be applid to a course node
+// based on the course id
+const getNodeClasses = (courseId) => {
+    if (coreCourses.indexOf(courseId) !== -1) {
+        return ["core"];
+    } else if (multiCoreCourses.indexOf(courseId) !== -1) {
+        return ["multiCore"];
+    } else {
+        return [];
     }
-
-    return OTHER_COURSE_COLOR;
 }
 
 // scales position from data.js to absolute coordinates
@@ -141,10 +144,18 @@ document.addEventListener('DOMContentLoaded', (_) => {
         // ...and does same for target
         .target(d => scalePosition(courses.get(d.target).position));
 
-    root.selectAll("path.link")
-        .data(edges)
+    root.selectAll("path.link.prerequisite")
+        .data(prereqEdges)
         .join("path")
-        .classed("link", true) // adds .link class to each path
+        .classed("link prerequisite", true) // adds .link class to each path
+        .attr("d", linkGenerator)
+        .attr("fill", "none")
+        .attr("stroke", "black");
+
+    root.selectAll("path.link.corequisite")
+        .data(coreqEdges)
+        .join("path")
+        .classed("link corequisite", true) // adds .link class to each path
         .attr("d", linkGenerator)
         .attr("fill", "none")
         .attr("stroke", "black");
@@ -166,7 +177,10 @@ document.addEventListener('DOMContentLoaded', (_) => {
     const courseGroups = root.selectAll("g.course")
         .data(courses.values())
         .enter()
-        .append("g").classed("course", true) // add .course class so css styles affect it
+        .append("g")
+        // needs to be done before we add course class, as it will wipe existing classes on the object:
+        .attr("class", d => getNodeClasses(d.id).join(" ")) // set classes based on course info
+        .classed("course", true) // add .course class so css styles affect it
         // position it according to the value of the course's position attribute in data.js
         .attr("transform", d => `translate(${scalePosition(d.position).join(" ")})`) // scalePosition returns [x,y] so joining with space yields `x y`
         .attr("id", course => course.id)
@@ -175,9 +189,8 @@ document.addEventListener('DOMContentLoaded', (_) => {
 
     // draw the circle
     courseGroups.append("circle")
-        .attr("r", NODE_RADIUS)
-        .style("fill", d => getCourseColor(d));
-    // stroke style managed in CSS via classes
+        .attr("r", NODE_RADIUS);
+    // fill, stroke style managed in CSS via classes
 
     // draw text labels
     courseGroups.append("text")
