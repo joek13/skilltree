@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 body {
     /* use sans-serif font */
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Inter, Arial, Helvetica, sans-serif;
     /* disable scrollbars on overflow */
     overflow: hidden;
 }
@@ -18,4 +20,39 @@ html, body, svg {
     font-weight: bold;
     font-size: 1.3rem;
     stroke-width: 3;
+}
+
+/* link between prereq and course */
+.link {
+    stroke-width: 3;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+#vizContainer {
+    flex-grow: 1;
+    background-color: #efefef;
+}
+
+#sidebar {
+    font-size: 0.8em;
+    width: 500px;
+    padding: 10px;
+}
+
+p {
+    font-size: 1.2rem;
+}
+
+.course.selected > circle {
+    stroke: #5F4BB6;
+    stroke-width: 5;
+}
+
+.course > circle {
+    stroke: black;
 }
