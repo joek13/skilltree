@@ -5,6 +5,7 @@ export const courses = new Map([
         "id": "cs11x", // course id: mnemonic + sequence number
         "position": [0, 0], // position: [row, column]
         "prerequisites": [], // any prerequisites
+        "corequisites": [], // any corequisites (like prerequisites but can be taken concurrently)
     },
     */
     // level 0

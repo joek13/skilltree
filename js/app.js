@@ -36,6 +36,8 @@ for (const course of courses.values()) {
     }
 }
 
+// variables for positioning
+
 // unit size
 const UNIT = 1;
 
@@ -67,6 +69,7 @@ const scalePosition = (position) => {
     return [position[1] * INTRA_LEVEL_SPACING, position[0] * INTER_LEVEL_SPACING];
 }
 
+// computes display name for a course.
 const displayName = (course) => {
     // has defined display name? return that.
     if (!!course.display)
@@ -80,6 +83,7 @@ const displayName = (course) => {
     }
 }
 
+// gets selected course based on url hash in window.location
 const getSelectedCourse = () => {
     if (window.location.hash.startsWith("#")) {
         // selected course in url hash
@@ -97,6 +101,8 @@ const getSelectedCourse = () => {
 }
 
 
+// sets the selected course in the url hash,
+// updates css classes accordingly.
 const setSelectedCourse = (courseId) => {
     // remove .selected class from any existing object
     d3.selectAll(".course.selected").classed("selected", false);
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', (_) => {
     // initialize zoom behavior
     const zoom = d3.zoom();
 
-    // root svg
+    // root svg tag
     const svg = d3.select("#vizContainer")
         .append("svg")
         .call(zoom) // add svg behavior
@@ -144,6 +150,7 @@ document.addEventListener('DOMContentLoaded', (_) => {
         // ...and does same for target
         .target(d => scalePosition(courses.get(d.target).position));
 
+    // creates the links for all prereqs
     root.selectAll("path.link.prerequisite")
         .data(prereqEdges)
         .join("path")
@@ -152,6 +159,7 @@ document.addEventListener('DOMContentLoaded', (_) => {
         .attr("fill", "none")
         .attr("stroke", "black");
 
+    // creates the links for all coreqs
     root.selectAll("path.link.corequisite")
         .data(coreqEdges)
         .join("path")
@@ -208,6 +216,8 @@ document.addEventListener('DOMContentLoaded', (_) => {
 
     if (!!selectedCourse) {
         // if a course is selected, make sure we update the css class
+        // (if we have just loaded the page, then getSelectedCourse will
+        // return the selected course, but it will not yet have the appropriate class)
         setSelectedCourse(selectedCourse.id);
     }
 
