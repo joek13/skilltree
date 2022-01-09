@@ -100,25 +100,19 @@ const getSelectedCourse = () => {
     return null;
 }
 
+// parses a course id like cs2102 into ["cs", 2102]
+const parseId = (courseId) => {
+    const idRegex = /([a-zA-Z]+)(\d+)/;
 
-// sets the selected course in the url hash,
-// updates css classes accordingly.
-const setSelectedCourse = (courseId) => {
-    // remove .selected class from any existing object
-    d3.selectAll(".course.selected").classed("selected", false);
-
-    if (!!courseId) {
-        // update class on the newly selected object
-        d3.select("#" + courseId).classed("selected", true)
-
-        // update window hash
-        window.location.hash = "#" + courseId;
+    const match = courseId.match(idRegex);
+    if (!!match) {
+        return [match[1], match[2]];
     } else {
-        // clear selection
-        window.location.hash = "";
+        // invalid course id
+        return null;
     }
-}
 
+}
 
 document.addEventListener('DOMContentLoaded', (_) => {
     // initialize zoom behavior
@@ -128,6 +122,7 @@ document.addEventListener('DOMContentLoaded', (_) => {
     const svg = d3.select("#vizContainer")
         .append("svg")
         .call(zoom) // add svg behavior
+        .on("click", () => setSelectedCourse(null))
         .on("dblclick.zoom", null); // deregister doubleclick handler
 
     // root svg <g> element, will be transformed by the zoom
@@ -141,6 +136,140 @@ document.addEventListener('DOMContentLoaded', (_) => {
         root.attr("transform", e.transform);
     });
 
+    // sidebar update logic
+    // updates sidebar when a course is selected
+    const updateSidebar = (selectedCourse) => {
+        // clear course info div
+        const courseInfo = d3.select("#courseInfo");
+        courseInfo.html("");
+
+        if (!!selectedCourse) {
+            // hide help bar
+            d3.select("#help")
+                .classed("hidden", true);
+
+            // show course info
+
+            // course title
+            courseInfo.append("h1")
+                .text(`${selectedCourse.id}: ${selectedCourse.title}`)
+
+            // add prerequisites
+            if (selectedCourse.prerequisites.length > 0) {
+                // Prerequisites:
+                const prereqText = courseInfo.append("p");
+                prereqText.append("strong").text("Prerequisites: ");
+
+                // span containing the actual prereqs
+                const prereqSpan = prereqText.append("span");
+
+                // link that directs to the prereq
+                prereqSpan.selectAll("a.prereqLink")
+                    .data(selectedCourse.prerequisites)
+                    .enter()
+                    .append("a")
+                    .attr("href", prereqId => "#" + prereqId)
+                    .classed("prereqLink", true)
+                    .text(prereqId => prereqId)
+                    .on("click", (e, prereqId) => {
+                        setSelectedCourse(prereqId); // update selection
+                        zoomToCourse(prereqId, true); // zoom to center the course
+                    });
+            }
+
+            // same with corequisites
+
+            if (!!selectedCourse.corequisites && selectedCourse.corequisites.length > 0) {
+                // corequisites:
+                const coreqText = courseInfo.append("p");
+                coreqText.append("strong").text("Corequisites: ");
+
+                // span containing the actual prereqs
+                const coreqSpan = coreqText.append("span");
+
+                // link that directs to the prereq
+                coreqSpan.selectAll("a.prereqLink")
+                    .data(selectedCourse.corequisites)
+                    .enter()
+                    .append("a")
+                    .attr("href", coreqId => "#" + coreqId)
+                    .classed("prereqLink", true)
+                    .text(coreqId => coreqId)
+                    .on("click", (e, coreqId) => {
+                        setSelectedCourse(coreqId); // update selection
+                        zoomToCourse(coreqId, true); // zoom to center the course
+                    });
+
+                courseInfo.append("p")
+                    .text("(Like prerequisites, but can be taken concurrently)");
+            }
+
+            // are there multiple real courses that can fulfill this requirement node?
+            if (!!selectedCourse.realizations) {
+                // iterate over and display links to them on course forum.
+                // iterate over them
+                for (const courseId of selectedCourse.realizations) {
+                    const [mnemonic, num] = parseId(courseId);
+
+                    // add links to courseForum
+                    courseInfo.append("p")
+                        .append("a")
+                        .attr("href", `https://thecourseforum.com/course/${mnemonic}/${num}`)
+                        .text(`View ${courseId} on theCourseForum`);
+                }
+            } else {
+                // only one course.
+                // just add link to that single course
+                const [mnemonic, num] = parseId(selectedCourse.id);
+                // add links to courseForum
+                courseInfo.append("p")
+                    .append("a")
+                    .attr("href", `https://thecourseforum.com/course/${mnemonic}/${num}`)
+                    .text(`View ${selectedCourse.id} on theCourseForum`);
+            }
+
+        } else {
+            // show help bar
+            d3.select("#help")
+                .classed("hidden", false);
+        }
+    };
+
+    // sets the selected course in the url hash,
+    // updates css classes accordingly.
+    const setSelectedCourse = (courseId) => {
+        // remove .selected class from any existing object
+        d3.selectAll(".course.selected").classed("selected", false);
+
+        if (!!courseId) {
+            // update class on the newly selected object
+            d3.select("#" + courseId).classed("selected", true)
+
+            // update window hash
+            window.location.hash = "#" + courseId;
+
+            updateSidebar(courses.get(courseId));
+        } else {
+            // clear selection
+            window.location.hash = "";
+
+            updateSidebar(null);
+        }
+    }
+
+    const zoomToCourse = (courseId, animated) => {
+        const scaledPosition = scalePosition(courses.get(courseId).position);
+
+        if (animated) {
+            // zoom to center this course 
+            svg.transition()
+                .duration(500)
+                .call(zoom.translateTo, scaledPosition[0], scaledPosition[1]);
+        } else {
+            // zoom to center this course without animation
+            svg.call(zoom.translateTo, scaledPosition[0], scaledPosition[1]);
+        }
+    };
 
 
     // link generator
@@ -170,15 +299,10 @@ document.addEventListener('DOMContentLoaded', (_) => {
 
     // hadnle when the user clicks a course node.
     const handleCourseNodeClicked = (e, course) => {
+        e.stopPropagation(); // stops background from catching event and deselecting
+
         setSelectedCourse(course.id);
-
-        // scale the position
-        const scaledPosition = scalePosition(course.position);
-
-        // zoom to center this course 
-        svg.transition()
-            .duration(500)
-            .call(zoom.translateTo, scaledPosition[0], scaledPosition[1]);
+        zoomToCourse(course.id, true);
     };
 
     // create g.course svg element for each course
@@ -226,7 +350,7 @@ document.addEventListener('DOMContentLoaded', (_) => {
         const scaledPosition = scalePosition(selectedCourse.position);
 
         // zoom to center this course 
-        svg.call(zoom.translateTo, scaledPosition[0], scaledPosition[1]);
+        zoomToCourse(selectedCourse.id, false);
     } else {
         // zoom to center (0,0)
         svg.call(zoom.translateTo, 0, 0);
